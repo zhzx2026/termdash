@@ -1,55 +1,36 @@
-# 🖥️ termdash
+# termdash
 
-一个好看、可交互的实时系统监控终端仪表盘。基于 Python + [Textual](https://github.com/Textualize/textual) + [psutil](https://github.com/giampaolo/psutil) 构建。
+一条简洁的终端系统状态栏，实时刷新。
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
-
-## ✨ 特性
-
-- 📋 **4 个页面**：概览 / 进程 / 磁盘 / 网络，用 `Tab` 或数字键 `1-4` 切换
-- ⚡ 实时资源占用（CPU / 内存 / 磁盘 彩色进度条）
-- 🔥 进程 TOP 50，支持方向键上下浏览
-- 💾 所有磁盘分区详情
-- 🌐 实时网络收发速度与总量
-- 🎨 深色主题 + 圆角边框 + 高亮配色
-
-## 🚀 安装
-
-```bash
-pip install rich textual psutil
-git clone https://github.com/zhzx2026/termdash.git
-cd termdash
-pip install .
+```text
+zhongdeMacBook-Air │ CPU  23.5% │ MEM  82.0% │ DSK   5.3% │ ↓  1.2K/s │ ↑ 456B/s │ LOAD 2.1 │ 🔌 100% │ 14:30:00
 ```
 
-## 🎯 使用
+## 安装
+
+```bash
+pip install psutil
+git clone https://github.com/zhzx2026/termdash.git
+cd termdash && pip install .
+```
+
+## 使用
 
 ```bash
 termdash
 ```
 
-或（不用安装）：
+单行显示，每秒刷新，`Ctrl+C` 退出。
 
-```bash
-cd termdash
-python3 -m termdash
-```
+## 显示内容
 
-## ⌨️ 快捷键
-
-| 按键 | 功能 |
+| 项目 | 说明 |
 |------|------|
-| `1` / `2` / `3` / `4` | 切换到 概览 / 进程 / 磁盘 / 网络 |
-| `Tab` | 循环切换页面 |
-| `↑` / `↓` | 进程列表上下移动 |
-| `q` / `Ctrl+C` | 退出 |
-
-## 🛠 技术栈
-
-- [Textual](https://github.com/Textualize/textual) — 交互式终端 UI 框架
-- [psutil](https://github.com/giampaolo/psutil) — 系统信息采集
-
-## 📄 License
-
-MIT
+| 主机名 | 当前主机 |
+| CPU | CPU 使用率 |
+| MEM | 内存使用率 |
+| DSK | 根分区磁盘使用率 |
+| ↓ / ↑ | 网络下载 / 上传速率 |
+| LOAD | 系统负载 |
+| 🔋 / 🔌 | 电池电量（笔记本） |
+| 时间 | 当前时间 |
