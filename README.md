@@ -1,15 +1,17 @@
 # termdash
 
-一条简洁的终端系统状态栏，实时刷新。
+macOS 菜单栏系统状态，简洁优雅。
 
 ```text
-zhongdeMacBook-Air │ CPU  23.5% │ MEM  82.0% │ DSK   5.3% │ ↓  1.2K/s │ ↑ 456B/s │ LOAD 2.1 │ 🔌 100% │ 14:30:00
+  C:23% │ M:80% │ D:5% │ 100%    ← macOS 顶部菜单栏显示
 ```
+
+点击菜单栏图标展开详情。
 
 ## 安装
 
 ```bash
-pip install psutil
+pip install psutil rumps
 git clone https://github.com/zhzx2026/termdash.git
 cd termdash && pip install .
 ```
@@ -20,17 +22,6 @@ cd termdash && pip install .
 termdash
 ```
 
-单行显示，每秒刷新，`Ctrl+C` 退出。
+菜单栏即出现状态信息，每秒刷新。点击图标查看详情，菜单中选「退出」关闭。
 
-## 显示内容
-
-| 项目 | 说明 |
-|------|------|
-| 主机名 | 当前主机 |
-| CPU | CPU 使用率 |
-| MEM | 内存使用率 |
-| DSK | 根分区磁盘使用率 |
-| ↓ / ↑ | 网络下载 / 上传速率 |
-| LOAD | 系统负载 |
-| 🔋 / 🔌 | 电池电量（笔记本） |
-| 时间 | 当前时间 |
+> 如果菜单栏空间不足（刘海屏 MacBook），状态文字可能被系统折叠，可在菜单栏拖动调整位置。
