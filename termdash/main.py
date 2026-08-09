@@ -7,6 +7,7 @@ from datetime import datetime
 
 import psutil
 import rumps
+from AppKit import NSMenu, NSMenuItem
 
 
 def fmt(n: float) -> str:
@@ -22,30 +23,10 @@ class TermdashApp(rumps.App):
         super().__init__("", quit_button=None)
         self.prev_net = psutil.net_io_counters()
         self.prev_time = time.time()
-
-        # 一次性建好菜单项，只改标题
-        self.cpu_item = rumps.MenuItem("CPU")
-        self.mem_item = rumps.MenuItem("内存")
-        self.disk_item = rumps.MenuItem("磁盘")
-        self.net_item = rumps.MenuItem("网络")
-        self.bat_item = rumps.MenuItem("电池")
-        self.time_item = rumps.MenuItem("时间")
-
-        self.menu = [
-            self.cpu_item,
-            self.mem_item,
-            self.disk_item,
-            self.net_item,
-            self.bat_item,
-            self.time_item,
-            None,
-            rumps.MenuItem("退出 Termdash", callback=self._quit),
-        ]
-
         self.timer = rumps.Timer(self.tick, 1)
         self.timer.start()
 
-    def _quit(self, _: rumps.MenuItem) -> None:
+    def _quit_(self, sender: NSMenuItem) -> None:
         rumps.quit_application()
 
     def tick(self, _: rumps.Timer) -> None:
@@ -71,24 +52,32 @@ class TermdashApp(rumps.App):
             title += f"  {bat.percent}%"
         self.title = title
 
-        # 更新菜单项标题 + 通知 NSMenu 刷新
-        self._set(self.cpu_item, f"CPU     {cpu:.1f}%      负载 {load[0]:.1f} / {load[1]:.1f} / {load[2]:.1f}")
-        self._set(self.mem_item, f"内存    {mem.percent:.1f}%      {fmt(mem.used)} / {fmt(mem.total)}")
-        self._set(self.disk_item, f"磁盘    {disk.percent:.1f}%      {fmt(disk.used)} / {fmt(disk.total)}")
-        self._set(self.net_item, f"网络    ↓ {fmt(down)}/s   ↑ {fmt(up)}/s")
-        self._set(self.bat_item, (
+        bat_str = (
             f"电池    {bat.percent}% 充电中" if (bat and bat.power_plugged)
             else f"电池    {bat.percent}% 电池供电" if bat
             else "电池    无"
-        ))
-        self._set(self.time_item, f"时间    {t}")
+        )
 
-    def _set(self, item: rumps.MenuItem, title: str) -> None:
-        item.title = title
-        ns = item._menuitem
-        menu = ns.menu()
-        if menu:
-            menu.itemChanged_(ns)
+        # 直接用 NSMenu + NSMenuItem 重建，绕过 rumps 的限制
+        menu = NSMenu.alloc().init()
+        for text in [
+            f"CPU     {cpu:.1f}%      负载 {load[0]:.1f} / {load[1]:.1f} / {load[2]:.1f}",
+            f"内存    {mem.percent:.1f}%      {fmt(mem.used)} / {fmt(mem.total)}",
+            f"磁盘    {disk.percent:.1f}%      {fmt(disk.used)} / {fmt(disk.total)}",
+            f"网络    ↓ {fmt(down)}/s   ↑ {fmt(up)}/s",
+            bat_str,
+            f"时间    {t}",
+        ]:
+            item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(text, None, "")
+            item.setEnabled_(True)
+            menu.addItem_(item)
+        menu.addItem_(NSMenuItem.separatorItem())
+        quit_item = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("退出 Termdash", "_quit:", "q")
+        quit_item.setTarget_(self)
+        quit_item.setEnabled_(True)
+        menu.addItem_(quit_item)
+
+        self.nsstatusitem.setMenu_(menu)
 
 
 def main() -> None:
