@@ -22,27 +22,6 @@ class TermdashApp(rumps.App):
         super().__init__("", quit_button=None)
         self.prev_net = psutil.net_io_counters()
         self.prev_time = time.time()
-
-        # 一次建好菜单结构，只改标题不重建
-        self.cpu_item = rumps.MenuItem("CPU")
-        self.mem_item = rumps.MenuItem("内存")
-        self.disk_item = rumps.MenuItem("磁盘")
-        self.net_item = rumps.MenuItem("网络")
-        self.bat_item = rumps.MenuItem("电池")
-        self.time_item = rumps.MenuItem("时间")
-        self.quit_item = rumps.MenuItem("退出 Termdash", callback=self._quit)
-
-        self.menu = [
-            self.cpu_item,
-            self.mem_item,
-            self.disk_item,
-            self.net_item,
-            self.bat_item,
-            self.time_item,
-            None,
-            self.quit_item,
-        ]
-
         self.timer = rumps.Timer(self.tick, 1)
         self.timer.start()
 
@@ -56,9 +35,9 @@ class TermdashApp(rumps.App):
 
         now = time.time()
         net = psutil.net_io_counters()
-        interval = max(now - self.prev_time, 0.001)
-        down = (net.bytes_recv - self.prev_net.bytes_recv) / interval
-        up = (net.bytes_sent - self.prev_net.bytes_sent) / interval
+        sec = max(now - self.prev_time, 0.001)
+        down = (net.bytes_recv - self.prev_net.bytes_recv) / sec
+        up = (net.bytes_sent - self.prev_net.bytes_sent) / sec
         self.prev_net = net
         self.prev_time = now
 
@@ -66,20 +45,28 @@ class TermdashApp(rumps.App):
         load = psutil.getloadavg()
         t = datetime.now().strftime("%H:%M:%S")
 
-        self.title = f"{cpu:.0f}%  {mem.percent:.0f}%  {disk.percent:.0f}%"
+        # 菜单栏标题
+        title = f"{cpu:.0f}%  {mem.percent:.0f}%  {disk.percent:.0f}%"
         if bat:
-            self.title += f"  {bat.percent}%"
+            title += f"  {bat.percent}%"
+        self.title = title
 
-        self.cpu_item.title = f"CPU     {cpu:.1f}%      负载 {load[0]:.1f} / {load[1]:.1f} / {load[2]:.1f}"
-        self.mem_item.title = f"内存    {mem.percent:.1f}%      {fmt(mem.used)} / {fmt(mem.total)}"
-        self.disk_item.title = f"磁盘    {disk.percent:.1f}%      {fmt(disk.used)} / {fmt(disk.total)}"
-        self.net_item.title = f"网络    ↓ {fmt(down)}/s   ↑ {fmt(up)}/s"
-        self.bat_item.title = (
+        # 重建菜单（每次都是最新的，且可靠绑定退出回调）
+        bat_str = (
             f"电池    {bat.percent}% 充电中" if (bat and bat.power_plugged)
             else f"电池    {bat.percent}% 电池供电" if bat
             else "电池    无"
         )
-        self.time_item.title = f"时间    {t}"
+        self.menu = [
+            rumps.MenuItem(f"CPU     {cpu:.1f}%      负载 {load[0]:.1f} / {load[1]:.1f} / {load[2]:.1f}"),
+            rumps.MenuItem(f"内存    {mem.percent:.1f}%      {fmt(mem.used)} / {fmt(mem.total)}"),
+            rumps.MenuItem(f"磁盘    {disk.percent:.1f}%      {fmt(disk.used)} / {fmt(disk.total)}"),
+            rumps.MenuItem(f"网络    ↓ {fmt(down)}/s   ↑ {fmt(up)}/s"),
+            rumps.MenuItem(bat_str),
+            rumps.MenuItem(f"时间    {t}"),
+            None,
+            rumps.MenuItem("退出 Termdash", callback=self._quit),
+        ]
 
 
 def main() -> None:
