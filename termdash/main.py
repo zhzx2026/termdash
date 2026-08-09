@@ -22,11 +22,31 @@ class TermdashApp(rumps.App):
         super().__init__("", quit_button=None)
         self.prev_net = psutil.net_io_counters()
         self.prev_time = time.time()
+
+        # 一次建好菜单结构，只改标题不重建
+        self.cpu_item = rumps.MenuItem("CPU")
+        self.mem_item = rumps.MenuItem("内存")
+        self.disk_item = rumps.MenuItem("磁盘")
+        self.net_item = rumps.MenuItem("网络")
+        self.bat_item = rumps.MenuItem("电池")
+        self.time_item = rumps.MenuItem("时间")
+        self.quit_item = rumps.MenuItem("退出 Termdash", callback=self._quit)
+
+        self.menu = [
+            self.cpu_item,
+            self.mem_item,
+            self.disk_item,
+            self.net_item,
+            self.bat_item,
+            self.time_item,
+            None,
+            self.quit_item,
+        ]
+
         self.timer = rumps.Timer(self.tick, 1)
         self.timer.start()
 
-    @rumps.clicked("退出 Termdash")
-    def quit_app(self, _: rumps.MenuItem) -> None:
+    def _quit(self, _: rumps.MenuItem) -> None:
         rumps.quit_application()
 
     def tick(self, _: rumps.Timer) -> None:
@@ -44,42 +64,29 @@ class TermdashApp(rumps.App):
 
         bat = psutil.sensors_battery()
         load = psutil.getloadavg()
-
-        # 菜单栏标题 — 简洁有品
-        parts = [f"{cpu:.0f}%"]
-        parts.append(f"{mem.percent:.0f}%")
-        parts.append(f"{disk.percent:.0f}%")
-        if bat:
-            parts.append(f"{bat.percent}%")
-        self.title = "  ".join(parts)
-
-        # 下拉菜单详情
         t = datetime.now().strftime("%H:%M:%S")
-        bat_str = (
-            f"{bat.percent}% 充电中" if (bat and bat.power_plugged)
-            else f"{bat.percent}% 电池供电" if bat
-            else "无电池"
+
+        self.title = f"{cpu:.0f}%  {mem.percent:.0f}%  {disk.percent:.0f}%"
+        if bat:
+            self.title += f"  {bat.percent}%"
+
+        self.cpu_item.title = f"CPU     {cpu:.1f}%      负载 {load[0]:.1f} / {load[1]:.1f} / {load[2]:.1f}"
+        self.mem_item.title = f"内存    {mem.percent:.1f}%      {fmt(mem.used)} / {fmt(mem.total)}"
+        self.disk_item.title = f"磁盘    {disk.percent:.1f}%      {fmt(disk.used)} / {fmt(disk.total)}"
+        self.net_item.title = f"网络    ↓ {fmt(down)}/s   ↑ {fmt(up)}/s"
+        self.bat_item.title = (
+            f"电池    {bat.percent}% 充电中" if (bat and bat.power_plugged)
+            else f"电池    {bat.percent}% 电池供电" if bat
+            else "电池    无"
         )
-        self.menu.clear()
-        self.menu.update([
-            f"CPU     {cpu:.1f}%      负载 {load[0]:.1f} / {load[1]:.1f} / {load[2]:.1f}",
-            f"内存    {mem.percent:.1f}%      {fmt(mem.used)} / {fmt(mem.total)}",
-            f"磁盘    {disk.percent:.1f}%      {fmt(disk.used)} / {fmt(disk.total)}",
-            f"网络    ↓ {fmt(down)}/s   ↑ {fmt(up)}/s",
-            f"电池    {bat_str}",
-            f"时间    {t}",
-            None,
-            "退出 Termdash",
-        ])
+        self.time_item.title = f"时间    {t}"
 
 
 def main() -> None:
     if "--fg" not in sys.argv:
         subprocess.Popen(
             [sys.executable, "-m", "termdash", "--fg"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL,
         )
         return
     TermdashApp().run()
