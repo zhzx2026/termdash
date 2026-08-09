@@ -417,27 +417,23 @@ class TermdashApp(App):
         if not cmd:
             return
         self.shell_log.write(f"\n[bold cyan]$ {cmd}[/]")
-        self.shell_history.append(cmd)
-        self.run_command(cmd)
+        self._exec(cmd)
 
-    async def run_command(self, cmd: str) -> None:
+    def _exec(self, cmd: str) -> None:
         try:
-            proc = await self.run_async(
-                subprocess.run,
+            result = subprocess.run(
                 ["bash", "-c", cmd],
-                capture_output=True,
-                text=True,
-                timeout=30,
+                capture_output=True, text=True, timeout=30,
                 cwd=os.getcwd(),
             )
-            if proc.stdout:
-                self.shell_log.write(proc.stdout.rstrip())
-            if proc.stderr:
-                self.shell_log.write(f"[red]{proc.stderr.rstrip()}[/]")
-            if proc.returncode != 0:
-                self.shell_log.write(f"[yellow]退出码: {proc.returncode}[/]")
+            if result.stdout:
+                self.shell_log.write(result.stdout.rstrip())
+            if result.stderr:
+                self.shell_log.write(f"[red]{result.stderr.rstrip()}[/]")
+            if result.returncode != 0:
+                self.shell_log.write(f"[yellow]退出码: {result.returncode}[/]")
         except subprocess.TimeoutExpired:
-            self.shell_log.write("[red]⏱️ 命令超时（30秒）[/]")
+            self.shell_log.write("[red]⏱ 命令超时（30秒）[/]")
         except Exception as e:
             self.shell_log.write(f"[red]错误: {e}[/]")
         self.shell_input.focus()
