@@ -99,8 +99,8 @@ def build_network_panel() -> Panel:
     )
 
 
-def build_top_processes() -> Panel:
-    """返回占用最高的前 5 个进程表格。"""
+def build_top_processes(max_rows: int = 5, max_cols: int = 4) -> Panel:
+    """返回占用最高的前 N 个进程表格，行数列数随终端尺寸自适应。"""
     processes = []
     for proc in psutil.process_iter(["pid", "name", "cpu_percent", "memory_percent"]):
         try:
@@ -111,20 +111,27 @@ def build_top_processes() -> Panel:
     processes.sort(key=lambda p: (p["cpu_percent"] or 0), reverse=True)
 
     table = Table(show_header=True, header_style="bold cyan", box=box.SIMPLE)
-    table.add_column("PID", justify="right")
-    table.add_column("进程名", no_wrap=True)
-    table.add_column("CPU %", justify="right")
-    table.add_column("内存 %", justify="right")
+    table.add_column("PID", justify="right", min_width=5)
+    table.add_column("进程名", no_wrap=True, min_width=12, max_width=24)
+    if max_cols >= 3:
+        table.add_column("CPU %", justify="right")
+    if max_cols >= 4:
+        table.add_column("内存 %", justify="right")
 
-    for p in processes[:5]:
-        table.add_row(
-            str(p["pid"]),
-            p["name"] or "?",
-            f"{p['cpu_percent'] or 0:.1f}",
-            f"{p['memory_percent'] or 0:.1f}",
-        )
+    for p in processes[:max_rows]:
+        row = [str(p["pid"]), p["name"] or "?"]
+        if max_cols >= 3:
+            row.append(f"{p['cpu_percent'] or 0:.1f}")
+        if max_cols >= 4:
+            row.append(f"{p['memory_percent'] or 0:.1f}")
+        table.add_row(*row)
 
-    return Panel(table, title="🔥  进程 TOP 5", border_style="yellow", box=box.ROUNDED)
+    return Panel(
+        table,
+        title=f"🔥  进程 TOP {max_rows}",
+        border_style="yellow",
+        box=box.ROUNDED,
+    )
 
 
 def build_footer() -> Panel:
@@ -179,13 +186,18 @@ def build_layout() -> Layout:
     return layout
 
 
-def render_dashboard(layout: Layout) -> Layout:
-    """将实时数据渲染进布局。"""
+def render_dashboard(layout: Layout, width: int, height: int) -> Layout:
+    """将实时数据渲染进布局，行数列数随终端尺寸自适应。"""
+    body_height = max(height - 8, 5)
+    processes_height = int(body_height * 0.75)
+    rows = max(1, min(15, (processes_height - 8) // 2))
+    cols = 4 if width >= 90 else 3 if width >= 75 else 2
+
     layout["header"].update(build_header())
     layout["sysinfo"].update(build_system_info())
     layout["gauges"].update(build_resource_gauges())
     layout["network"].update(build_network_panel())
-    layout["processes"].update(build_top_processes())
+    layout["processes"].update(build_top_processes(max_rows=rows, max_cols=cols))
     layout["footer"].update(build_footer())
     return layout
 
@@ -207,19 +219,27 @@ def main() -> None:
     layout = build_layout()
 
     if not args.watch:
-        console.print(render_dashboard(layout))
+        console.print(render_dashboard(layout, console.width, console.height))
+        console.print("[bold yellow]⏳ 界面显示 5 秒后自动关闭，按 Ctrl+C 立即退出[/]")
+        try:
+            time.sleep(5)
+        except KeyboardInterrupt:
+            pass
         return
 
     try:
         with Live(
             console=console,
-            screen=True,
+            screen=False,
             auto_refresh=False,
             refresh_per_second=10,
         ) as live:
+            live.update(render_dashboard(layout, console.width, console.height))
+            live.refresh()
             while True:
-                live.update(render_dashboard(layout))
                 time.sleep(args.interval)
+                live.update(render_dashboard(layout, console.width, console.height))
+                live.refresh()
     except KeyboardInterrupt:
         console.print("[bold green]👋 再见！[/]")
     except Exception as exc:  # 兜底：避免静默闪退
