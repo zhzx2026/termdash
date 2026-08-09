@@ -57,16 +57,18 @@ class TermdashApp(rumps.App):
             else f"电池    {bat.percent}% 电池供电" if bat
             else "电池    无"
         )
-        self.menu = [
-            rumps.MenuItem(f"CPU     {cpu:.1f}%      负载 {load[0]:.1f} / {load[1]:.1f} / {load[2]:.1f}"),
-            rumps.MenuItem(f"内存    {mem.percent:.1f}%      {fmt(mem.used)} / {fmt(mem.total)}"),
-            rumps.MenuItem(f"磁盘    {disk.percent:.1f}%      {fmt(disk.used)} / {fmt(disk.total)}"),
-            rumps.MenuItem(f"网络    ↓ {fmt(down)}/s   ↑ {fmt(up)}/s"),
-            rumps.MenuItem(bat_str),
-            rumps.MenuItem(f"时间    {t}"),
-            None,
-            rumps.MenuItem("退出 Termdash", callback=self._quit),
-        ]
+        self.menu.clear()
+        for s in [
+            f"CPU     {cpu:.1f}%      负载 {load[0]:.1f} / {load[1]:.1f} / {load[2]:.1f}",
+            f"内存    {mem.percent:.1f}%      {fmt(mem.used)} / {fmt(mem.total)}",
+            f"磁盘    {disk.percent:.1f}%      {fmt(disk.used)} / {fmt(disk.total)}",
+            f"网络    ↓ {fmt(down)}/s   ↑ {fmt(up)}/s",
+            bat_str,
+            f"时间    {t}",
+        ]:
+            self.menu.add(rumps.MenuItem(s))
+        self.menu.add(None)
+        self.menu.add(rumps.MenuItem("退出 Termdash", callback=self._quit))
 
 
 def main() -> None:
