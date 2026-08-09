@@ -196,27 +196,24 @@ def main() -> None:
         "-i", "--interval", type=float, default=1.0, help="刷新间隔（秒），默认 1.0"
     )
     parser.add_argument(
-        "-f",
-        "--fullscreen",
+        "-w",
+        "--watch",
         action="store_true",
-        help="使用全屏（备用屏幕）模式，仅支持部分终端",
+        help="实时刷新模式（默认只打印一次即退出）",
     )
     args = parser.parse_args()
 
     console = Console()
     layout = build_layout()
 
-    if console.width < 70:
-        console.print(
-            "[bold yellow]⚠️ 终端太窄，建议把窗口拉宽到 70 列以上以获得最佳效果[/]"
-        )
-        console.print("[bold yellow]💡 也可以试试：python -m termdash -f 全屏模式[/]")
+    if not args.watch:
+        console.print(render_dashboard(layout))
         return
 
     try:
         with Live(
             console=console,
-            screen=args.fullscreen,
+            screen=True,
             auto_refresh=False,
             refresh_per_second=10,
         ) as live:
