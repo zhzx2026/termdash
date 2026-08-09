@@ -1,42 +1,53 @@
 # 🖥️ termdash
 
-一个好看的实时系统监控终端仪表盘。基于 Python + [Rich](https://github.com/Textualize/rich) + [psutil](https://github.com/giampaolo/psutil) 构建。
+一个好看、可交互的实时系统监控终端仪表盘。基于 Python + [Textual](https://github.com/Textualize/textual) + [psutil](https://github.com/giampaolo/psutil) 构建。
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## ✨ 特性
 
-- 📋 系统基本信息（主机名、系统、内核、开机时间、CPU 核心数）
-- ⚡ 实时资源占用（CPU / 内存 / 磁盘 进度条）
-- 🌐 网络流量统计
-- 🔥 占用最高的 TOP 5 进程
-- 🎨 漂亮的富文本布局与颜色
+- 📋 **4 个页面**：概览 / 进程 / 磁盘 / 网络，用 `Tab` 或数字键 `1-4` 切换
+- ⚡ 实时资源占用（CPU / 内存 / 磁盘 彩色进度条）
+- 🔥 进程 TOP 50，支持方向键上下浏览
+- 💾 所有磁盘分区详情
+- 🌐 实时网络收发速度与总量
+- 🎨 深色主题 + 圆角边框 + 高亮配色
 
 ## 🚀 安装
 
 ```bash
+pip install rich textual psutil
 git clone https://github.com/zhzx2026/termdash.git
 cd termdash
-pip install -r requirements.txt
+pip install .
 ```
 
 ## 🎯 使用
 
 ```bash
-# 直接运行
-python -m termdash
-
-# 自定义刷新间隔（秒）
-python -m termdash --interval 1.5
-python -m termdash -i 0.5
+termdash
 ```
 
-按 `Ctrl+C` 退出。
+或（不用安装）：
+
+```bash
+cd termdash
+python3 -m termdash
+```
+
+## ⌨️ 快捷键
+
+| 按键 | 功能 |
+|------|------|
+| `1` / `2` / `3` / `4` | 切换到 概览 / 进程 / 磁盘 / 网络 |
+| `Tab` | 循环切换页面 |
+| `↑` / `↓` | 进程列表上下移动 |
+| `q` / `Ctrl+C` | 退出 |
 
 ## 🛠 技术栈
 
-- [Rich](https://github.com/Textualize/rich) — 终端富文本渲染
+- [Textual](https://github.com/Textualize/textual) — 交互式终端 UI 框架
 - [psutil](https://github.com/giampaolo/psutil) — 系统信息采集
 
 ## 📄 License
